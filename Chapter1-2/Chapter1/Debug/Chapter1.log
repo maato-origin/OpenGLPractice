@@ -1,0 +1,6 @@
+﻿  Game.cpp
+c:\users\t-khm\onedrive\デスクトップ\gameprogramming_practice\chapter1-2\chapter1\game.cpp(148): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
+c:\users\t-khm\onedrive\デスクトップ\gameprogramming_practice\chapter1-2\chapter1\game.cpp(243): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
+  Main.cpp
+  コードを生成中...
+  Chapter1.vcxproj -> C:\Users\t-khm\OneDrive\デスクトップ\GameProgramming_practice\Chapter1-2\Debug\Chapter1.exe
