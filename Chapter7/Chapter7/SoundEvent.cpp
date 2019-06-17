@@ -121,3 +121,51 @@ float SoundEvent::GetParameter(const std::string& name)
 	}
 	return retVal;
 }
+
+bool SoundEvent::Is3D() const
+{
+	bool retVal = false;
+	auto event = mSystem ? mSystem->GetEventInstance(mID) : nullptr;
+	if (event)
+	{
+		//イベント記述子を取得
+		FMOD::Studio::EventDescription* ed = nullptr;
+		event->getDescription(&ed);
+		if (ed)
+		{
+			ed->is3D(&retVal);
+		}
+	}
+	return retVal;
+}
+
+namespace
+{
+	FMOD_VECTOR VecToFMOD(const Vector3& in)
+	{
+		//ゲーム座標をFMODに変換
+		FMOD_VECTOR v;
+		v.x = in.y;
+		v.y = in.z;
+		v.z = in.x;
+		return v;
+	}
+}
+
+void SoundEvent::Set3DAttributes(const Matrix4& worldTrans)
+{
+	auto event = mSystem ? mSystem->GetEventInstance(mID) :nullptr;
+	if(event)
+	{
+		FMOD_3D_ATTRIBUTES attr;
+		//位置と方向をセット
+		attr.position = VecToFMOD(worldTrans.GetTranslation());
+		//ワールド空間では第1行が前方
+		attr.forward = VecToFMOD(worldTrans.GetXAxis());
+		//第3行が上
+		attr.up = VecToFMOD(worldTrans.GetZAxis());
+		//速度は0(ドップラー効果仕様時は修正)
+		attr.velocity = { 0.0f,0.0f,0.0f };
+		event->set3DAttributes(&attr);
+	}
+}

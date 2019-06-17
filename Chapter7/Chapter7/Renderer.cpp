@@ -43,7 +43,7 @@ bool Renderer::Initialize(float screenWidth, float screenHeight)
 	//ハードウェアアクセラレーションを使用
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-	mWindow = SDL_CreateWindow("Game Programming in C++ (Chapter6)", 100, 100,
+	mWindow = SDL_CreateWindow("Game Programming in C++ (Chapter7)", 100, 100,
 		static_cast<int>(mScreenWidth), static_cast<int>(mScreenHeight), SDL_WINDOW_OPENGL);
 	if (!mWindow)
 	{

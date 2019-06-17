@@ -4,7 +4,7 @@
 #include <fmod_errors.h>
 #include <vector>
 
-//unsigned int AudioSystem::sNextID = 0;
+unsigned int AudioSystem::sNextID = 0;
 
 AudioSystem::AudioSystem(Game* game)
 	:mGame(game)
@@ -111,6 +111,25 @@ void AudioSystem::LoadBank(const std::string& name)
 				mEvents.emplace(eventName, e);
 			}
 		}
+
+		//バンク内にあるバスの数を取得
+		int numBuses = 0;
+		bank->getBusCount(&numBuses);
+		if (numBuses > 0)
+		{
+			//バンク内にあるバスのリストを取得
+			std::vector<FMOD::Studio::Bus*> buses(numBuses);
+			bank->getBusList(buses.data(), numBuses, &numBuses);
+			char busName[512];
+			for (int i = 0; i < numBuses; i++)
+			{
+				FMOD::Studio::Bus* bus = buses[i];
+				//このバスのパスを取得
+				bus->getPath(busName, 512, nullptr);
+				//バスの連想配列に追加
+				mBuses.emplace(busName, bus);
+			}
+		}
 	}
 }
 
@@ -144,6 +163,29 @@ void AudioSystem::UnloadBank(const std::string& name)
 			if (eventi != mEvents.end())
 			{
 				mEvents.erase(eventi);
+			}
+		}
+	}
+
+	//バンク内のバスの数を取得
+	int numBuses = 0;
+	bank->getBusCount(&numBuses);
+	if (numBuses > 0)
+	{
+		//バンク内のバスのリストを取得
+		std::vector<FMOD::Studio::Bus*> buses(numBuses);
+		bank->getBusList(buses.data(), numBuses, &numBuses);
+		char busName[512];
+		for (int i = 0; i < numBuses; i++)
+		{
+			FMOD::Studio::Bus* bus = buses[i];
+			//バスのパスを取得
+			bus->getPath(busName, 512, nullptr);
+			//バスを消去
+			auto busi = mBuses.find(busName);
+			if (busi != mBuses.end())
+			{
+				mBuses.erase(busi);
 			}
 		}
 	}
@@ -217,4 +259,86 @@ void AudioSystem::Update(float deltaTime)
 
 	//FMODの更新
 	mSystem->update();
+}
+
+namespace
+{
+	FMOD_VECTOR VecToFMOD(const Vector3& in)
+	{
+		//ゲーム座標をFMODに変換
+		FMOD_VECTOR v;
+		v.x = in.y;
+		v.y = in.z;
+		v.z = in.x;
+		return v;
+	}
+}
+
+void AudioSystem::SetListener(const Matrix4& viewMatrix)
+{
+	//ベクトルを得るためのビュー行列の逆行列を計算
+	Matrix4 invView = viewMatrix;
+	invView.Invert();
+	FMOD_3D_ATTRIBUTES listener;
+	//位置と方向をセット
+	listener.position = VecToFMOD(invView.GetTranslation());
+	//逆ビュー行列では第3行が前方向
+	listener.forward = VecToFMOD(invView.GetZAxis());
+	//逆ビュー行列では第2行が上方向
+	listener.up = VecToFMOD(invView.GetYAxis());
+	//速度を0に設定（ドップラー効果仕様の場合は修正）
+	listener.velocity = { 0.0f,0.0f,0.0f };
+	//FMODに送る(0はリスナーが一人)
+	mSystem->setListenerAttributes(0, &listener);
+}
+
+float AudioSystem::GetBusVolume(const std::string& name) const
+{
+	float retVal = 0.0f;
+	const auto iter = mBuses.find(name);
+	if (iter != mBuses.end())
+	{
+		iter->second->getVolume(&retVal);
+	}
+	return retVal;
+}
+
+bool AudioSystem::GetBusPaused(const std::string& name) const
+{
+	bool retVal = false;
+	const auto iter = mBuses.find(name);
+	if (iter != mBuses.end())
+	{
+		iter->second->getPaused(&retVal);
+	}
+	return retVal;
+}
+
+void AudioSystem::SetBusVolume(const std::string& name, float volume)
+{
+	auto iter = mBuses.find(name);
+	if (iter != mBuses.end())
+	{
+		iter->second->setVolume(volume);
+	}
+}
+
+void AudioSystem::SetBusPaused(const std::string& name, bool pause)
+{
+	auto iter = mBuses.find(name);
+	if (iter != mBuses.end())
+	{
+		iter->second->setPaused(pause);
+	}
+}
+
+FMOD::Studio::EventInstance* AudioSystem::GetEventInstance(unsigned int id)
+{
+	FMOD::Studio::EventInstance* event = nullptr;
+	auto iter = mEventInstances.find(id);
+	if (iter != mEventInstances.end())
+	{
+		event = iter->second;
+	}
+	return event;
 }

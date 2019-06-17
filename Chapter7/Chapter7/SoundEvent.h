@@ -22,6 +22,9 @@ public:
 	float GetVolume() const;
 	float GetPitch() const;
 	float GetParameter(const std::string& name);
+	//ポジショナル
+	bool Is3D() const;
+	void Set3DAttributes(const Matrix4& worldTrans);
 	
 protected:
 	//コンストラクターがprotectedでAudioSystemがfriendなので

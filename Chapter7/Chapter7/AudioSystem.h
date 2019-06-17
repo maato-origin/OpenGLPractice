@@ -35,6 +35,14 @@ public:
 
 	void Update(float deltaTime);
 
+	//ポジショナルオーディオ用
+	void SetListener(const Matrix4& viewMatrix);
+	//バスの制御
+	float GetBusVolume(const std::string& name) const;
+	bool GetBusPaused(const std::string& name) const;
+	void SetBusVolume(const std::string& name, float volume);
+	void SetBusPaused(const std::string& name, bool pause);
+
 protected:
 	friend class SoundEvent;
 	FMOD::Studio::EventInstance* GetEventInstance(unsigned int id);
@@ -49,6 +57,8 @@ private:
 	std::unordered_map<std::string, FMOD::Studio::EventDescription*> mEvents;
 	//イベントIDからEventInstanceへの連想配列
 	std::unordered_map<unsigned int, FMOD::Studio::EventInstance*> mEventInstances;
+	//バスの連想配列
+	std::unordered_map<std::string, FMOD::Studio::Bus*> mBuses;
 	//FMOD studioシステム
 	FMOD::Studio::System* mSystem;
 	//FMOD Low-levelシステム
